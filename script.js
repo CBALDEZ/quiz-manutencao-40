@@ -268,29 +268,53 @@ function proximaPergunta() {
     mostrarPergunta();
 }
 
-function finalizarQuiz() {
+
+async function finalizarQuiz() {
     if (!registrarResposta()) return;
 
     const acertos = respostasAluno.filter(Boolean).length;
     const pontuacao = acertos * 10;
 
+    const resultado = {
+        nome: nomeAluno,
+        pontuacao: pontuacao,
+        total_questoes: 10
+    };
+
+    const textoResultado = document.getElementById("resultText");
+
     document.getElementById("quizBox").style.display = "none";
     document.getElementById("resultBox").style.display = "block";
 
-    document.getElementById("resultText").textContent =
+    textoResultado.textContent =
         `${nomeAluno}, você acertou ${acertos} de 10 questões e fez ${pontuacao} pontos!`;
 
-    const resultado = {
-        nome: nomeAluno,
-        acertos: acertos,
-        totalQuestoes: 10,
-        pontuacao: pontuacao,
-        data: new Date().toISOString()
-    };
+    try {
+        textoResultado.textContent += " Salvando seu resultado...";
 
-    console.log("Resultado preparado para o Supabase:", resultado);
+        const { data, error } = await clienteSupabase
+            .from("quiz_resultados")
+            .insert([resultado])
+            .select();
 
-    window.resultadoQuiz = resultado;
+        if (error) {
+            console.error("Erro ao salvar no Supabase:", error);
+            textoResultado.textContent +=
+                " Não foi possível registrar sua pontuação. Avise o instrutor.";
+            return;
+        }
+
+        console.log("Resultado salvo com sucesso:", data);
+
+        textoResultado.textContent =
+            `${nomeAluno}, você acertou ${acertos} de 10 questões e fez ${pontuacao} pontos! Resultado registrado com sucesso.`;
+
+    } catch (erro) {
+        console.error("Falha na comunicação com Supabase:", erro);
+
+        textoResultado.textContent +=
+            " Falha na comunicação com o sistema. Avise o instrutor.";
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
