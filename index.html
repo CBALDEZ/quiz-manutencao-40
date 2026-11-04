@@ -1,98 +1,94 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quiz SENAI • Manutenção 4.0</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#eef3f8;font-family:Arial,sans-serif;color:#182536}
-header{background:linear-gradient(120deg,#10243a,#075a7a);color:white;padding:28px 18px;text-align:center}
-header small{color:#8deaf1;letter-spacing:2px;font-weight:bold}h1{margin:10px 0}header p{color:#d5e8f2;margin:0}
-main{max-width:1050px;margin:25px auto;padding:0 16px 35px}.layout{display:grid;grid-template-columns:1.5fr 1fr;gap:20px}
-.panel{background:white;border:1px solid #dce5ed;border-radius:18px;padding:22px;box-shadow:0 8px 25px #16334a0d}
-h2{margin:0 0 16px;font-size:21px}label{display:block;font-weight:bold;margin:12px 0 7px}
-input{width:100%;padding:12px;border:1px solid #cbd6e1;border-radius:10px;font-size:16px}
-button{border:0;border-radius:10px;padding:12px 16px;font-weight:bold;font-size:15px;cursor:pointer}
-button:hover{filter:brightness(.97)}.primary{background:#087ea4;color:white;width:100%;margin-top:15px}
-.secondary{background:#e8f3f8;color:#075675}.danger{background:#fff0f0;color:#a32020}
-.small{font-size:12px;color:#637386}#quizBox{display:none}.progress{height:9px;background:#e5edf3;border-radius:20px;overflow:hidden;margin:14px 0}
-#progressFill{height:100%;width:0;background:linear-gradient(90deg,#087ea4,#22c7d9)}
-.question{font-size:20px;font-weight:bold;line-height:1.4;margin:18px 0}.answers{display:grid;gap:10px}
-.answer{background:#f5f8fb;border:2px solid #e1e9f0;text-align:left;font-weight:normal;width:100%}
-.answer.selected{border-color:#087ea4;background:#e3f6fb}.actions{display:flex;gap:10px;margin-top:15px}
-.actions button{flex:1}.scoreBig{font-size:42px;font-weight:900;color:#087ea4;text-align:center;margin:8px}
-#leaderboard{padding:0;margin:0;list-style:none}#leaderboard li{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #edf1f5}
-.rank{font-weight:bold;color:#087ea4;min-width:28px}.points{font-weight:bold}.winner{background:#fff8df;border-radius:8px;padding:3px 7px}
-.prize{background:#fff8df;border:1px solid #f2dfa1;border-radius:12px;padding:12px;margin-bottom:16px}
-.prize strong{display:block;color:#7c5700;margin-bottom:4px}.admin{margin-top:20px;border-top:1px solid #e4ebf1;padding-top:16px}
-.admin h3{font-size:15px}.adminRow{display:flex;gap:8px}.adminRow input{font-size:14px;padding:9px}.adminRow button{white-space:nowrap}
-.hidden{display:none!important}footer{text-align:center;color:#8291a1;font-size:12px;padding:15px}
-@media(max-width:760px){.layout{grid-template-columns:1fr}.panel{padding:18px}}
-</style></head><body>
-<header><small>SENAI • OFICINA TECNOLÓGICA</small><h1>Desafio Manutenção 4.0</h1>
-<p>IoT • Realidade Aumentada • Realidade Virtual • Manutenção Inteligente</p></header>
-<main><div class="layout"><section class="panel">
-<div id="welcome"><h2>🏁 Participe do desafio!</h2><p>Teste seus conhecimentos sobre as tecnologias que estão transformando a manutenção industrial.</p>
-<label for="playerName">Seu nome (ou nome da equipe)</label><input id="playerName" maxlength="40" placeholder="Digite seu nome">
-<button class="primary" onclick="startQuiz()">COMEÇAR QUIZ</button><p class="small">10 perguntas • 10 pontos por acerto</p></div>
-<div id="quizBox"><div style="display:flex;justify-content:space-between"><b id="questionCounter"></b></div>
-<div class="progress"><div id="progressFill"></div></div><div id="questionText" class="question"></div><div id="answerOptions" class="answers"></div>
-<button id="nextBtn" class="primary" onclick="nextQuestion()" disabled>PRÓXIMA</button></div>
-<div id="resultBox" class="hidden"><h2>🎉 Desafio concluído!</h2><div class="scoreBig" id="finalScore"></div><p id="resultMessage" style="text-align:center"></p>
-<button class="primary" onclick="resetPlayerView()">NOVO PARTICIPANTE</button></div>
-</section><aside class="panel">
-<div class="prize"><strong>🏆 Prêmio da oficina</strong><div id="prizeDisplay">Prêmio a ser anunciado pelo instrutor.</div></div>
-<h2>🥇 Ranking</h2><ol id="leaderboard"><li class="small">Ainda não há participantes.</li></ol>
-<p class="small">Pontuações salvas neste navegador/dispositivo.</p><div class="admin"><h3>⚙️ Painel do instrutor</h3>
-<label class="small" for="prizeInput">Defina ou altere a premiação</label><div class="adminRow"><input id="prizeInput" placeholder="Ex.: Kit ferramentas / medalha"><button class="secondary" onclick="savePrize()">Salvar</button></div>
-<button class="danger" style="margin-top:12px;width:100%" onclick="resetRanking()">ZERAR RANKING / NOVA RODADA</button>
-<p class="small">O reset apaga as pontuações salvas neste navegador. A ação pede confirmação.</p></div>
-</aside></div></main><footer>Quiz educativo • Manutenção 4.0 • SENAI</footer>
-<script>
-// Banco de questões atualizado com distribuição equilibrada do gabarito (0=A, 1=B, 2=C, 3=D)
-const bank=[
-["O que caracteriza a Manutenção 4.0?",["Consertar apenas após a quebra","Manutenção apenas em horários fixos","Uso de dados, conectividade e tecnologias digitais","Eliminar profissionais"],2],
-["O que é IoT na indústria?",["Ferramenta manual","Conexão de objetos e equipamentos para trocar dados","Rede social para operadores","Sistema sem sensores"],1],
-["Aplicação típica de sensores IoT?",["Monitorar vibração e temperatura em tempo real","Pintar máquinas","Substituir proteções","Aumentar consumo"],0],
-["O que é manutenção preditiva?",["Após a falha","Troca semanal de todas as peças","Análise de dados para antecipar falhas","Inspeção sem registros"],2],
-["Principal característica da RA?",["Substitui o ambiente real por virtual","Sobrepõe informações digitais ao ambiente real","Funciona sem câmera","Só serve para jogos"],1],
-["O que diferencia a RV?",["Exibe apenas textos","Não serve para treinamento","É uma planilha","Imersão em ambiente digital simulado"],3],
-["Como a RV contribui para formação?",["Simular procedimentos em ambiente controlado","Dispensar segurança","Garantir que máquinas nunca falhem","Substituir todos os cursos"],0],
-["Painel recebe vibração e temperatura e alerta anomalias. Isso é:",["Corretiva emergencial","RV sem dados","Monitoramento de condição conectado","Lubrificação manual"],2],
-["Vantagem da RA numa intervenção?",["Ocultar informações","Impedir acesso a manuais","Eliminar análise de riscos","Exibir instruções e dados sobre componentes no contexto real"],3],
-["Por que registrar dados de manutenção?",["Apoiar decisões, tendências e confiabilidade","Burocracia sem finalidade","Dispensar inspeções","Evitar comunicação"],0],
-["Interoperabilidade significa:",["Equipamentos da mesma cor","Sistemas diferentes trocam e utilizam informações","Desligar máquinas da rede","Usar só um fabricante"],1],
-["Antes da manutenção, é essencial:",["Começar imediatamente","Ignorar procedimento com pressa","Seguir segurança, análise de riscos e bloqueio aplicável","Confiar apenas no sensor"],2],
-["Exemplo de IoT com análise de dados:",["Sensores coletam e sistema analisa tendências/alertas","Anotar sem analisar","Operar sem registros","Ignorar alarmes"],0],
-["O que é Gêmeo Digital?",["Cópia física da máquina","Representação digital de ativo/processo alimentada por dados","Desenho sem relação com operação","QR code que substitui a máquina"],1]
-];
-const KEY="quiz_manutencao40_scores",PRIZE="quiz_manutencao40_prize";
-let player="",qs=[],idx=0,score=0,chosen=null;
-function scores(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return []}}
-function startQuiz(){player=document.getElementById("playerName").value.trim();if(!player){alert("Digite seu nome.");return}
-qs=[...bank].sort(()=>Math.random()-.5).slice(0,10);idx=0;score=0;
-welcome.classList.add("hidden");resultBox.classList.add("hidden");quizBox.style.display="block";showQ()}
-function showQ(){chosen=null;let q=qs[idx];questionCounter.textContent=`Pergunta ${idx+1}/${qs.length}`;
-progressFill.style.width=(idx/qs.length*100)+"%";questionText.textContent=q[0];answerOptions.innerHTML="";
-q[1].forEach((a,i)=>{let b=document.createElement("button");b.className="answer";b.textContent=String.fromCharCode(65+i)+") "+a;b.onclick=()=>choose(i);answerOptions.appendChild(b)});
-nextBtn.disabled=true;nextBtn.textContent=idx===qs.length-1?"FINALIZAR QUIZ":"PRÓXIMA"}
-function choose(i){if(chosen!==null)return;chosen=i;
-document.querySelectorAll(".answer").forEach(btn=>btn.classList.remove("selected"));
-document.querySelectorAll(".answer")[i].classList.add("selected");
-nextBtn.disabled=false}
-function nextQuestion(){if(chosen===null)return;
-if(chosen===qs[idx][2]){score+=10}
-idx++;if(idx<qs.length)showQ();else finish()}
-function finish(){quizBox.style.display="none";resultBox.classList.remove("hidden");finalScore.textContent=score+" pontos";
-resultMessage.textContent=`Parabéns, ${player}! Você acertou ${score/10} de ${qs.length} perguntas.`;
-let s=scores();s.push({name:player,score,date:new Date().toISOString()});localStorage.setItem(KEY,JSON.stringify(s));render()}
-function render(){let s=scores().sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name)).slice(0,10);leaderboard.innerHTML="";
-if(!s.length){leaderboard.innerHTML='<li class="small">Ainda não há participantes.</li>';return}
-s.forEach((x,i)=>{let li=document.createElement("li"),left=document.createElement("span"),nm=document.createElement("strong"),pts=document.createElement("span");
-left.innerHTML=`<span class="rank">${i+1}.</span> `;nm.textContent=x.name;if(i===0)nm.className="winner";left.appendChild(nm);pts.className="points";pts.textContent=x.score+" pts";li.append(left,pts);leaderboard.appendChild(li)})}
-function savePrize(){let p=prizeInput.value.trim();if(!p){alert("Digite a premiação.");return}localStorage.setItem(PRIZE,p);showPrize();alert("Prêmio salvo!")}
-function showPrize(){let p=localStorage.getItem(PRIZE);prizeDisplay.textContent=p||"Prêmio a ser anunciado pelo instrutor.";prizeInput.value=p||""}
-function resetRanking(){if(!confirm("Confirma apagar todas as pontuações deste navegador e iniciar nova rodada?"))return;localStorage.removeItem(KEY);render();alert("Ranking zerado!")}
-function resetPlayerView(){resultBox.classList.add("hidden");welcome.classList.remove("hidden");playerName.value="";playerName.focus()}
-render();showPrize();
-</script></body></html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Quiz SENAI - Manutenção 4.0</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header class="cabecalho">
+            <h1>QUIZ SENAI</h1>
+            <p>IoT | Realidade Aumentada | Realidade Virtual | Manutenção 4.0</p>
+        </header>
+
+        <!-- ÁREA INICIAL -->
+        <section id="welcome" class="card">
+
+            <h2>Desafio do Conhecimento</h2>
+
+            <p>
+                Teste seus conhecimentos sobre as tecnologias
+                aplicadas à manutenção industrial.
+            </p>
+
+            <label for="participantName">Nome do participante:</label>
+
+            <input
+                type="text"
+                id="participantName"
+                placeholder="Digite seu nome completo"
+                maxlength="80"
+                autocomplete="name"
+            >
+
+            <button id="startQuizBtn">
+                INICIAR QUIZ
+            </button>
+
+        </section>
+
+        <!-- ÁREA DAS PERGUNTAS -->
+        <section id="quizBox" class="card" style="display:none;">
+
+            <h2 id="questionCounter">Pergunta 1 de 10</h2>
+
+            <div class="barra-progresso">
+                <div id="progressBar"></div>
+            </div>
+
+            <h3 id="questionText"></h3>
+
+            <div id="alternatives"></div>
+
+            <button id="nextBtn">
+                PRÓXIMA PERGUNTA
+            </button>
+
+            <button id="finishBtn" style="display:none;">
+                FINALIZAR QUIZ
+            </button>
+
+        </section>
+
+        <!-- RESULTADO FINAL -->
+        <section id="resultBox" class="card" style="display:none;">
+
+            <h2>Resultado Final</h2>
+
+            <p id="resultText" class="resultado"></p>
+
+            <p>
+                Obrigado por participar do desafio
+                SENAI Manutenção 4.0!
+            </p>
+
+        </section>
+
+        <footer style="text-align:center; margin-top:30px;">
+            <p>SENAI | Educação Profissional e Tecnologia</p>
+        </footer>
+
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
