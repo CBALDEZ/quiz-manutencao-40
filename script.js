@@ -1,4 +1,14 @@
+// ==========================================
+// CONEXÃO COM SUPABASE
+// ==========================================
 
+const SUPABASE_URL = "https://xfwogqbcyixkjceupwql.supabase.co";
+const SUPABASE_KEY = "sb_publishable_SeWJdCtOD1yQD5tETCjtDQ_onC9lDBB";
+
+const clienteSupabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 const bancoQuestoes = [
     {
         pergunta: "O que caracteriza a Manutenção 4.0?",
