@@ -1,104 +1,18 @@
 
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+/*
+  QUIZ SENAI - MANUTENÇÃO 4.0
+  Painel administrativo do instrutor.
 
-    <title>Painel do Instrutor - SENAI</title>
+  Funcionalidades previstas:
+  1. Autenticação do instrutor.
+  2. Consulta ao ranking no Supabase.
+  3. Configuração do prêmio.
+  4. Controle de rodadas.
+  5. Reinicialização do ranking.
 
-    <link rel="stylesheet" href="style.css">
-</head>
+  A implementação será realizada após
+  configurar a autenticação e as permissões
+  de segurança do Supabase.
+*/
 
-<body>
-
-<main class="container">
-
-    <header class="cabecalho">
-        <h1>PAINEL DO INSTRUTOR</h1>
-        <p>Quiz SENAI - Manutenção 4.0</p>
-    </header>
-
-    <!-- LOGIN -->
-    <section id="loginBox" class="card">
-
-        <h2>Acesso restrito</h2>
-
-        <p>Área exclusiva do instrutor.</p>
-
-        <input
-            type="email"
-            id="adminEmail"
-            placeholder="E-mail do instrutor"
-        >
-
-        <input
-            type="password"
-            id="adminPassword"
-            placeholder="Senha"
-        >
-
-        <button id="loginBtn">
-            ENTRAR
-        </button>
-
-        <p id="loginMessage"></p>
-
-    </section>
-
-    <!-- ADMINISTRAÇÃO -->
-    <section id="adminPanel" style="display:none;">
-
-        <div class="card">
-            <h2>Configuração do desafio</h2>
-
-            <label for="prizeName">Prêmio da rodada:</label>
-
-            <input
-                type="text"
-                id="prizeName"
-                placeholder="Ex.: Prêmio surpresa SENAI"
-            >
-
-            <button id="savePrizeBtn">
-                SALVAR PRÊMIO
-            </button>
-        </div>
-
-        <div class="card">
-            <h2>Ranking dos participantes</h2>
-
-            <div id="rankingArea">
-                Aguardando conexão com o banco de dados...
-            </div>
-
-            <button id="refreshRankingBtn">
-                ATUALIZAR RANKING
-            </button>
-        </div>
-
-        <div class="card">
-            <h2>Controle da rodada</h2>
-
-            <p>
-                A reinicialização do ranking será protegida
-                e realizada somente pelo instrutor.
-            </p>
-
-            <button id="resetRankingBtn">
-                ENCERRAR E REINICIAR RODADA
-            </button>
-        </div>
-
-        <button id="logoutBtn">
-            SAIR DO PAINEL
-        </button>
-
-    </section>
-
-</main>
-
-<script src="admin.js"></script>
-
-</body>
-</html>
+console.log("Painel administrativo SENAI carregado.");
