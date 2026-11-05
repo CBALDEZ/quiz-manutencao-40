@@ -197,33 +197,7 @@ async function iniciarQuiz() {
     rodadaQuiz = data.rodada;
     premioQuiz = data.premio;
 
-    perguntasSelecionadas = embaralhar(bancoQuestoes)
-        .slice(0, 10)
-        .map(pergunta => {
-            const opcoesEmbaralhadas = embaralhar(
-                pergunta.opcoes.map((texto, indice) => ({
-                    texto,
-                    correta: indice === pergunta.correta
-                }))
-            );
-
-            return {
-                pergunta: pergunta.pergunta,
-                opcoes: opcoesEmbaralhadas
-            };
-        });
-
-    respostasAluno = [];
-    indiceAtual = 0;
-
-    document.getElementById("welcome").style.display = "none";
-    document.getElementById("quizBox").style.display = "block";
-
-    mostrarPergunta();
-}
-
-    }
-
+    // Seleciona e embaralha as perguntas
     perguntasSelecionadas = embaralhar(bancoQuestoes)
         .slice(0, 10)
         .map(pergunta => {
