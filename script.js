@@ -156,6 +156,8 @@ let perguntasSelecionadas = [];
 let respostasAluno = [];
 let indiceAtual = 0;
 let nomeAluno = "";
+let rodadaQuiz = 1;
+let premioQuiz = null;
 
 function embaralhar(lista) {
     const copia = [...lista];
@@ -168,7 +170,7 @@ function embaralhar(lista) {
     return copia;
 }
 
-function iniciarQuiz() {
+async function iniciarQuiz() {
     const campoNome = document.getElementById("participantName");
 
     nomeAluno = campoNome.value.trim();
@@ -176,6 +178,50 @@ function iniciarQuiz() {
     if (!nomeAluno) {
         alert("Digite seu nome para iniciar.");
         return;
+    }
+
+    // Consulta qual rodada está ativa
+    const { data, error } = await clienteSupabase
+        .from("quiz_configuracao")
+        .select("rodada, premio")
+        .eq("id", true)
+        .single();
+
+    if (error) {
+        console.error("Erro ao consultar rodada:", error);
+        alert("Não foi possível iniciar o quiz. Avise o instrutor.");
+        return;
+    }
+
+    // Guarda a rodada no momento em que o aluno inicia
+    rodadaQuiz = data.rodada;
+    premioQuiz = data.premio;
+
+    perguntasSelecionadas = embaralhar(bancoQuestoes)
+        .slice(0, 10)
+        .map(pergunta => {
+            const opcoesEmbaralhadas = embaralhar(
+                pergunta.opcoes.map((texto, indice) => ({
+                    texto,
+                    correta: indice === pergunta.correta
+                }))
+            );
+
+            return {
+                pergunta: pergunta.pergunta,
+                opcoes: opcoesEmbaralhadas
+            };
+        });
+
+    respostasAluno = [];
+    indiceAtual = 0;
+
+    document.getElementById("welcome").style.display = "none";
+    document.getElementById("quizBox").style.display = "block";
+
+    mostrarPergunta();
+}
+
     }
 
     perguntasSelecionadas = embaralhar(bancoQuestoes)
@@ -275,11 +321,13 @@ async function finalizarQuiz() {
     const acertos = respostasAluno.filter(Boolean).length;
     const pontuacao = acertos * 10;
 
-    const resultado = {
-        nome: nomeAluno,
-        pontuacao: pontuacao,
-        total_questoes: 10
-    };
+   const resultado = {
+    nome: nomeAluno,
+    pontuacao: pontuacao,
+    total_questoes: 10,
+    rodada: rodadaQuiz,
+    premio: premioQuiz
+};
 
     const textoResultado = document.getElementById("resultText");
 
