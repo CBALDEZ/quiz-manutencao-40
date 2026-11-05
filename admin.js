@@ -19,9 +19,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const rankingArea = document.getElementById("rankingArea");
     const refreshRankingBtn = document.getElementById("refreshRankingBtn");
+    const resetRankingBtn = document.getElementById("resetRankingBtn");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    // Verifica a sessão do instrutor
+    const prizeName = document.getElementById("prizeName");
+    const savePrizeBtn = document.getElementById("savePrizeBtn");
+
+    let rodadaAtual = 1;
+
     verificarSessao();
 
     async function verificarSessao() {
@@ -35,16 +40,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.session) {
             mostrarPainel();
-            carregarRanking();
+            await carregarConfiguracao();
+            await carregarRanking();
         } else {
             loginBox.style.display = "block";
             adminPanel.style.display = "none";
         }
     }
 
-    // Login
     loginBtn.addEventListener("click", async () => {
-
         const email = adminEmail.value.trim();
         const senha = adminPassword.value;
 
@@ -57,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loginBtn.disabled = true;
 
         const { error } = await clienteSupabase.auth.signInWithPassword({
-            email: email,
+            email,
             password: senha
         });
 
@@ -71,7 +75,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         loginMessage.textContent = "";
         mostrarPainel();
-        carregarRanking();
+
+        await carregarConfiguracao();
+        await carregarRanking();
     });
 
     function mostrarPainel() {
@@ -79,91 +85,185 @@ document.addEventListener("DOMContentLoaded", () => {
         adminPanel.style.display = "block";
     }
 
-    // Consulta o ranking no Supabase
-    async function carregarRanking() {
+    async function carregarConfiguracao() {
+        const { data, error } = await clienteSupabase
+            .from("quiz_configuracao")
+            .select("rodada, premio")
+            .eq("id", true)
+            .single();
 
-        rankingArea.textContent = "Carregando ranking...";
-
-        try {
-            const { data, error } = await clienteSupabase
-                .from("quiz_resultados")
-                .select("nome, pontuacao, total_questoes, criado_em")
-                .order("pontuacao", { ascending: false })
-                .order("criado_em", { ascending: true });
-
-            if (error) {
-                console.error("Erro ao consultar ranking:", error);
-                rankingArea.textContent =
-                    "Não foi possível carregar o ranking. Verifique a conexão.";
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                rankingArea.textContent =
-                    "Ainda não existem participantes registrados.";
-                return;
-            }
-
-            const tabela = document.createElement("table");
-            tabela.style.width = "100%";
-            tabela.style.borderCollapse = "collapse";
-
-            const cabecalho = document.createElement("thead");
-            cabecalho.innerHTML = `
-                <tr>
-                    <th>Posição</th>
-                    <th>Participante</th>
-                    <th>Pontuação</th>
-                    <th>Questões</th>
-                </tr>
-            `;
-
-            const corpo = document.createElement("tbody");
-
-            data.forEach((aluno, indice) => {
-                const linha = document.createElement("tr");
-
-                const posicao = indice + 1;
-                const medalha = ["🥇", "🥈", "🥉"][indice] || posicao + "º";
-
-                linha.innerHTML = `
-                    <td>${medalha}</td>
-                    <td></td>
-                    <td>${aluno.pontuacao} pontos</td>
-                    <td>${aluno.total_questoes}</td>
-                `;
-
-                // Usa textContent para exibir o nome com segurança
-                linha.children[1].textContent = aluno.nome;
-
-                linha.style.borderBottom = "1px solid #444";
-                linha.style.textAlign = "center";
-                linha.style.padding = "10px";
-
-                corpo.appendChild(linha);
-            });
-
-            tabela.appendChild(cabecalho);
-            tabela.appendChild(corpo);
-
-            rankingArea.replaceChildren(tabela);
-
-        } catch (erro) {
-            console.error("Falha ao carregar ranking:", erro);
-            rankingArea.textContent =
-                "Falha na comunicação com o banco de dados.";
+        if (error) {
+            console.error("Erro ao carregar configuração:", error);
+            alert("Não foi possível carregar a configuração da rodada.");
+            return false;
         }
+
+        rodadaAtual = data.rodada;
+        prizeName.value = data.premio || "";
+
+        console.log("Rodada atual:", rodadaAtual);
+        return true;
     }
 
-    // Atualizar ranking
+    // Salvar prêmio
+    if (savePrizeBtn) {
+        savePrizeBtn.addEventListener("click", async () => {
+            const premio = prizeName.value.trim();
+
+            savePrizeBtn.disabled = true;
+
+            const { error } = await clienteSupabase
+                .from("quiz_configuracao")
+                .update({ premio })
+                .eq("id", true);
+
+            savePrizeBtn.disabled = false;
+
+            if (error) {
+                console.error("Erro ao salvar prêmio:", error);
+                alert("Não foi possível salvar o prêmio.");
+                return;
+            }
+
+            alert("Prêmio salvo com sucesso!");
+        });
+    }
+
+    // Carregar ranking somente da rodada atual
+    async function carregarRanking() {
+        rankingArea.textContent = "Carregando ranking...";
+
+        const { data, error } = await clienteSupabase
+            .from("quiz_resultados")
+            .select("nome, pontuacao, total_questoes, criado_em")
+            .eq("rodada", rodadaAtual)
+            .order("pontuacao", { ascending: false })
+            .order("criado_em", { ascending: true });
+
+        if (error) {
+            console.error("Erro ao consultar ranking:", error);
+            rankingArea.textContent =
+                "Não foi possível carregar o ranking.";
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            rankingArea.textContent =
+                "Ainda não existem participantes nesta rodada.";
+            return;
+        }
+
+        const tabela = document.createElement("table");
+        tabela.style.width = "100%";
+        tabela.style.borderCollapse = "collapse";
+
+        const cabecalho = document.createElement("thead");
+        cabecalho.innerHTML = `
+            <tr>
+                <th>Posição</th>
+                <th>Participante</th>
+                <th>Pontuação</th>
+                <th>Questões</th>
+            </tr>
+        `;
+
+        const corpo = document.createElement("tbody");
+
+        data.forEach((aluno, indice) => {
+            const linha = document.createElement("tr");
+
+            const posicao = indice + 1;
+            const medalha = ["🥇", "🥈", "🥉"][indice] || posicao + "º";
+
+            const celulaPosicao = document.createElement("td");
+            celulaPosicao.textContent = medalha;
+
+            const celulaNome = document.createElement("td");
+            celulaNome.textContent = aluno.nome;
+
+            const celulaPontos = document.createElement("td");
+            celulaPontos.textContent = `${aluno.pontuacao} pontos`;
+
+            const celulaQuestoes = document.createElement("td");
+            celulaQuestoes.textContent = aluno.total_questoes;
+
+            linha.append(
+                celulaPosicao,
+                celulaNome,
+                celulaPontos,
+                celulaQuestoes
+            );
+
+            linha.style.borderBottom = "1px solid #444";
+            linha.style.textAlign = "center";
+
+            corpo.appendChild(linha);
+        });
+
+        tabela.append(cabecalho, corpo);
+        rankingArea.replaceChildren(tabela);
+    }
+
     if (refreshRankingBtn) {
-        refreshRankingBtn.addEventListener("click", carregarRanking);
+        refreshRankingBtn.addEventListener("click", async () => {
+            await carregarConfiguracao();
+            await carregarRanking();
+        });
+    }
+
+    // Encerrar e iniciar nova rodada sem apagar o histórico
+    if (resetRankingBtn) {
+        resetRankingBtn.addEventListener("click", async () => {
+
+            const confirmar = confirm(
+                `Deseja encerrar a rodada ${rodadaAtual} e iniciar a rodada ${rodadaAtual + 1}?\n\n` +
+                "Os resultados anteriores serão preservados no histórico."
+            );
+
+            if (!confirmar) return;
+
+            resetRankingBtn.disabled = true;
+            resetRankingBtn.textContent = "PROCESSANDO...";
+
+            const novaRodada = rodadaAtual + 1;
+
+            const { data, error } = await clienteSupabase
+                .from("quiz_configuracao")
+                .update({
+                    rodada: novaRodada,
+                    premio: null
+                })
+                .eq("id", true)
+                .select("rodada")
+                .single();
+
+            resetRankingBtn.disabled = false;
+            resetRankingBtn.textContent = "ENCERRAR E REINICIAR RODADA";
+
+            if (error) {
+                console.error("Erro ao reiniciar rodada:", error);
+                alert(
+                    "Não foi possível reiniciar a rodada. " +
+                    "Verifique a conexão e as permissões do Supabase."
+                );
+                return;
+            }
+
+            rodadaAtual = data.rodada;
+            prizeName.value = "";
+
+            await carregarRanking();
+
+            alert(
+                `Rodada ${rodadaAtual - 1} encerrada!\n` +
+                `Rodada ${rodadaAtual} iniciada com sucesso.`
+            );
+        });
     }
 
     // Sair do painel
     if (logoutBtn) {
         logoutBtn.addEventListener("click", async () => {
-
             const { error } = await clienteSupabase.auth.signOut();
 
             if (error) {
@@ -178,5 +278,4 @@ document.addEventListener("DOMContentLoaded", () => {
             loginMessage.textContent = "Sessão encerrada.";
         });
     }
-
 });
