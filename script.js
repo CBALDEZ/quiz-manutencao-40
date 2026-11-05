@@ -172,7 +172,6 @@ function embaralhar(lista) {
 
 async function iniciarQuiz() {
     const campoNome = document.getElementById("participantName");
-
     nomeAluno = campoNome.value.trim();
 
     if (!nomeAluno) {
@@ -180,7 +179,6 @@ async function iniciarQuiz() {
         return;
     }
 
-    // Consulta qual rodada está ativa
     const { data, error } = await clienteSupabase
         .from("quiz_configuracao")
         .select("rodada, premio")
@@ -193,17 +191,15 @@ async function iniciarQuiz() {
         return;
     }
 
-    // Guarda a rodada no momento em que o aluno inicia
     rodadaQuiz = data.rodada;
     premioQuiz = data.premio;
 
-    // Seleciona e embaralha as perguntas
     perguntasSelecionadas = embaralhar(bancoQuestoes)
         .slice(0, 10)
         .map(pergunta => {
             const opcoesEmbaralhadas = embaralhar(
                 pergunta.opcoes.map((texto, indice) => ({
-                    texto,
+                    texto: texto,
                     correta: indice === pergunta.correta
                 }))
             );
@@ -222,7 +218,6 @@ async function iniciarQuiz() {
 
     mostrarPergunta();
 }
-
 function mostrarPergunta() {
     const pergunta = perguntasSelecionadas[indiceAtual];
 
