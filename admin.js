@@ -1,18 +1,89 @@
 
-/*
-  QUIZ SENAI - MANUTENÇÃO 4.0
-  Painel administrativo do instrutor.
+const SUPABASE_URL = "https://xfwogqbcyixkjceupwql.supabase.co";
 
-  Funcionalidades previstas:
-  1. Autenticação do instrutor.
-  2. Consulta ao ranking no Supabase.
-  3. Configuração do prêmio.
-  4. Controle de rodadas.
-  5. Reinicialização do ranking.
+const SUPABASE_KEY = "SUA_CHAVE_PUBLICA_SUPABASE";
 
-  A implementação será realizada após
-  configurar a autenticação e as permissões
-  de segurança do Supabase.
-*/
+const clienteSupabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 
-console.log("Painel administrativo SENAI carregado.");
+document.addEventListener("DOMContentLoaded", () => {
+
+    const loginBox = document.getElementById("loginBox");
+    const adminPanel = document.getElementById("adminPanel");
+
+    const adminEmail = document.getElementById("adminEmail");
+    const adminPassword = document.getElementById("adminPassword");
+
+    const loginBtn = document.getElementById("loginBtn");
+    const loginMessage = document.getElementById("loginMessage");
+
+    // Verifica se já existe uma sessão ativa
+    verificarSessao();
+
+    async function verificarSessao() {
+
+        const { data } = await clienteSupabase.auth.getSession();
+
+        if (data.session) {
+            mostrarPainel();
+        } else {
+            loginBox.style.display = "block";
+            adminPanel.style.display = "none";
+        }
+    }
+
+    // Login do instrutor
+    loginBtn.addEventListener("click", async () => {
+
+        const email = adminEmail.value.trim();
+        const senha = adminPassword.value;
+
+        if (!email || !senha) {
+            loginMessage.textContent =
+                "Informe o e-mail e a senha.";
+            return;
+        }
+
+        loginMessage.textContent = "Verificando acesso...";
+
+        const { data, error } =
+            await clienteSupabase.auth.signInWithPassword({
+                email: email,
+                password: senha
+            });
+
+        if (error) {
+            loginMessage.textContent =
+                "E-mail ou senha inválidos.";
+            console.error(error);
+            return;
+        }
+
+        mostrarPainel();
+    });
+
+    // Exibe o painel administrativo
+    function mostrarPainel() {
+        loginBox.style.display = "none";
+        adminPanel.style.display = "block";
+    }
+
+    // Logout do instrutor
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+
+            await clienteSupabase.auth.signOut();
+
+            adminPanel.style.display = "none";
+            loginBox.style.display = "block";
+
+            loginMessage.textContent =
+                "Você saiu do painel administrativo.";
+        });
+    }
+
+});
